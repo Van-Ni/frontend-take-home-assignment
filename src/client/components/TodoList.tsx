@@ -87,9 +87,7 @@ export const TodoList = ({ filter }: { filter: TodoFilter }) => {
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
       },
-      onError: (error) => {
-        // eslint-disable-next-line no-console
-        console.error('Error updating todo:', error)
+      onError: () => {
         alert('There was an error updating the todo. Please try again.')
       },
     })
@@ -98,9 +96,7 @@ export const TodoList = ({ filter }: { filter: TodoFilter }) => {
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
       },
-      onError: (error) => {
-        // eslint-disable-next-line no-console
-        console.error('Error deleting todo:', error)
+      onError: () => {
         alert('There was an error deleting the todo. Please try again.')
       },
     })

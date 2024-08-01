@@ -33,9 +33,7 @@ export const CreateTodoForm = () => {
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
       },
-      onError: (error) => {
-        // eslint-disable-next-line no-console
-        console.error('Error creating todo:', error)
+      onError: () => {
         alert('There was an error creating the todo. Please try again.')
       },
     })
