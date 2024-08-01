@@ -79,11 +79,25 @@ export const TodoList = () => {
         alert('There was an error updating the todo. Please try again.')
       },
     })
+  const { mutate: deleteTodo, isLoading: isDeletingTodo } =
+    api.todo.delete.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error deleting todo:', error)
+        alert('There was an error deleting the todo. Please try again.')
+      },
+    })
   const handleToggleStatus = (todoId: number, currentStatus: string) => {
     updateTodo({
       todoId,
       status: currentStatus === 'completed' ? 'pending' : 'completed',
     })
+  }
+  const handleDeleteTodo = (todoId: number) => {
+    deleteTodo({ id: todoId })
   }
   return (
     <ul className="grid grid-cols-1 gap-y-3">
@@ -116,6 +130,15 @@ export const TodoList = () => {
               >
                 {todo.body}
               </label>
+              <button
+                type="button"
+                className="ml-auto flex h-[32px] w-[32px] items-center justify-center"
+                aria-label="Delete todo"
+                onClick={() => handleDeleteTodo(todo.id)}
+                disabled={isDeletingTodo}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
           </li>
         )
