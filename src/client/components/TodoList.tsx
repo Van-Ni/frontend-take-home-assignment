@@ -1,6 +1,7 @@
 import type { SVGProps } from 'react'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 import { api } from '@/utils/client/api'
 
@@ -65,6 +66,11 @@ import { api } from '@/utils/client/api'
 
 export const TodoList = () => {
   const apiContext = api.useContext()
+  const [animationParent] = useAutoAnimate({
+    duration: 400,
+    easing: 'ease-in-out',
+    disrespectUserMotionPreference: false,
+  })
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
@@ -100,7 +106,7 @@ export const TodoList = () => {
     deleteTodo({ id: todoId })
   }
   return (
-    <ul className="grid grid-cols-1 gap-y-3">
+    <ul className="grid grid-cols-1 gap-y-3" ref={animationParent}>
       {todos.map((todo) => {
         const isCompleted = todo.status === 'completed'
         return (
