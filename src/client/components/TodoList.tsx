@@ -1,4 +1,5 @@
 import type { SVGProps } from 'react'
+import type { TodoFilter } from '@/pages'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
@@ -63,8 +64,15 @@ import { api } from '@/utils/client/api'
  * Documentation references:
  *  - https://auto-animate.formkit.com
  */
-
-export const TodoList = () => {
+const getStatusesFromFilter = (
+  filter: TodoFilter
+): Array<'completed' | 'pending'> => {
+  if (filter === 'both') {
+    return ['completed', 'pending']
+  }
+  return [filter]
+}
+export const TodoList = ({ filter }: { filter: TodoFilter }) => {
   const apiContext = api.useContext()
   const [animationParent] = useAutoAnimate({
     duration: 400,
@@ -72,7 +80,7 @@ export const TodoList = () => {
     disrespectUserMotionPreference: false,
   })
   const { data: todos = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
+    statuses: getStatusesFromFilter(filter),
   })
   const { mutate: updateTodo, isLoading: isUpdatingTodo } =
     api.todoStatus.update.useMutation({

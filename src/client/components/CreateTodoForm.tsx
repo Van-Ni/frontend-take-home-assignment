@@ -33,6 +33,11 @@ export const CreateTodoForm = () => {
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
       },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error creating todo:', error)
+        alert('There was an error creating the todo. Please try again.')
+      },
     })
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
