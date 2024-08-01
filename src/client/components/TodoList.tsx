@@ -64,30 +64,62 @@ import { api } from '@/utils/client/api'
  */
 
 export const TodoList = () => {
+  const apiContext = api.useContext()
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
-
+  const { mutate: updateTodo, isLoading: isUpdatingTodo } =
+    api.todoStatus.update.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error updating todo:', error)
+        alert('There was an error updating the todo. Please try again.')
+      },
+    })
+  const handleToggleStatus = (todoId: number, currentStatus: string) => {
+    updateTodo({
+      todoId,
+      status: currentStatus === 'completed' ? 'pending' : 'completed',
+    })
+  }
   return (
     <ul className="grid grid-cols-1 gap-y-3">
-      {todos.map((todo) => (
-        <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
-            <Checkbox.Root
-              id={String(todo.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+      {todos.map((todo) => {
+        const isCompleted = todo.status === 'completed'
+        return (
+          <li key={todo.id}>
+            <div
+              className={`flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${
+                isCompleted ? 'bg-[#F8FAFC]' : ''
+              }`}
             >
-              <Checkbox.Indicator>
-                <CheckIcon className="h-4 w-4 text-white" />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
+              <Checkbox.Root
+                id={String(todo.id)}
+                className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                disabled={isUpdatingTodo}
+                checked={isCompleted}
+                onCheckedChange={() => handleToggleStatus(todo.id, todo.status)}
+              >
+                <Checkbox.Indicator>
+                  <CheckIcon className="h-4 w-4 text-white" />
+                </Checkbox.Indicator>
+              </Checkbox.Root>
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
-              {todo.body}
-            </label>
-          </div>
-        </li>
-      ))}
+              <label
+                className={`block pl-3 font-medium ${
+                  isCompleted ? 'text-[#64748B] line-through' : ''
+                }`}
+                htmlFor={String(todo.id)}
+              >
+                {todo.body}
+              </label>
+            </div>
+          </li>
+        )
+      })}
     </ul>
   )
 }
