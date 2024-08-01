@@ -1,6 +1,8 @@
 import type { SVGProps } from 'react'
+import type { TodoFilter } from '@/pages'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 import { api } from '@/utils/client/api'
 
@@ -62,32 +64,99 @@ import { api } from '@/utils/client/api'
  * Documentation references:
  *  - https://auto-animate.formkit.com
  */
-
-export const TodoList = () => {
-  const { data: todos = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
+const getStatusesFromFilter = (
+  filter: TodoFilter
+): Array<'completed' | 'pending'> => {
+  if (filter === 'both') {
+    return ['completed', 'pending']
+  }
+  return [filter]
+}
+export const TodoList = ({ filter }: { filter: TodoFilter }) => {
+  const apiContext = api.useContext()
+  const [animationParent] = useAutoAnimate({
+    duration: 400,
+    easing: 'ease-in-out',
+    disrespectUserMotionPreference: false,
   })
-
+  const { data: todos = [] } = api.todo.getAll.useQuery({
+    statuses: getStatusesFromFilter(filter),
+  })
+  const { mutate: updateTodo, isLoading: isUpdatingTodo } =
+    api.todoStatus.update.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error updating todo:', error)
+        alert('There was an error updating the todo. Please try again.')
+      },
+    })
+  const { mutate: deleteTodo, isLoading: isDeletingTodo } =
+    api.todo.delete.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error deleting todo:', error)
+        alert('There was an error deleting the todo. Please try again.')
+      },
+    })
+  const handleToggleStatus = (todoId: number, currentStatus: string) => {
+    updateTodo({
+      todoId,
+      status: currentStatus === 'completed' ? 'pending' : 'completed',
+    })
+  }
+  const handleDeleteTodo = (todoId: number) => {
+    deleteTodo({ id: todoId })
+  }
   return (
-    <ul className="grid grid-cols-1 gap-y-3">
-      {todos.map((todo) => (
-        <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
-            <Checkbox.Root
-              id={String(todo.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+    <ul className="grid grid-cols-1 gap-y-3" ref={animationParent}>
+      {todos.map((todo) => {
+        const isCompleted = todo.status === 'completed'
+        return (
+          <li key={todo.id}>
+            <div
+              className={`flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${
+                isCompleted ? 'bg-[#F8FAFC]' : ''
+              }`}
             >
-              <Checkbox.Indicator>
-                <CheckIcon className="h-4 w-4 text-white" />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
+              <Checkbox.Root
+                id={String(todo.id)}
+                className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                disabled={isUpdatingTodo}
+                checked={isCompleted}
+                onCheckedChange={() => handleToggleStatus(todo.id, todo.status)}
+              >
+                <Checkbox.Indicator>
+                  <CheckIcon className="h-4 w-4 text-white" />
+                </Checkbox.Indicator>
+              </Checkbox.Root>
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
-              {todo.body}
-            </label>
-          </div>
-        </li>
-      ))}
+              <label
+                className={`block pl-3 font-medium ${
+                  isCompleted ? 'text-[#64748B] line-through' : ''
+                }`}
+                htmlFor={String(todo.id)}
+              >
+                {todo.body}
+              </label>
+              <button
+                type="button"
+                className="ml-auto flex h-[32px] w-[32px] items-center justify-center"
+                aria-label="Delete todo"
+                onClick={() => handleDeleteTodo(todo.id)}
+                disabled={isDeletingTodo}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </li>
+        )
+      })}
     </ul>
   )
 }

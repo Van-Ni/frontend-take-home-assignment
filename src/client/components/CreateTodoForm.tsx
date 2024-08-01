@@ -33,10 +33,29 @@ export const CreateTodoForm = () => {
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
       },
+      onError: (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Error creating todo:', error)
+        alert('There was an error creating the todo. Please try again.')
+      },
     })
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (todoBody === '') {
+      return
+    }
+    createTodo({
+      body: todoBody,
+    })
+    setTodoBody('')
+  }
+
   return (
-    <form className="group flex items-center justify-between rounded-12 border border-gray-200 py-2 pr-4 focus-within:border-gray-400">
+    <form
+      onSubmit={handleSubmit}
+      className="group flex items-center justify-between rounded-12 border border-gray-200 py-2 pr-4 focus-within:border-gray-400"
+    >
       <label htmlFor={TODO_INPUT_ID} className="sr-only">
         Add todo
       </label>
@@ -53,14 +72,9 @@ export const CreateTodoForm = () => {
       />
 
       <button
-        type="button"
+        type="submit"
+        className="flex h-[36px] w-[67px] items-center rounded-full bg-[#334155] px-[20px] py-[8px] text-white"
         disabled={isCreatingTodo}
-        onClick={() => {
-          createTodo({
-            body: todoBody,
-          })
-          setTodoBody('')
-        }}
       >
         Add
       </button>
